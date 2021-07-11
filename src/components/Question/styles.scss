@@ -1,81 +1,103 @@
 .question {
-  background: #fefefe;
-  border-radius: 8px;
+  background-color: var(--white-details);
+  border-radius: 0.5rem;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  padding: 24px;
+  padding: 1.5rem;
+  position: relative;
 
   & + .question {
-    margin-top: 8px;
+    margin-top: 0.5rem;
   }
 
   &.highlighted {
-    background: #F4F0FF;
-    border: 1px solid #5209fc;
-    
+    background-color: #f4f0ff;
+    border: 1px solid var(--purple);
+
     footer .user-info span {
-      color: #29292E;
+      color: var(--black-text);
     }
   }
 
   &.answered {
-    background: #DBDCDD;
+    background-color: var(--gray-light);
   }
 
-  p{
-    color: #29292e;
+  p {
+    color: var(--black-text);
   }
 
   footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 24px;
+    margin-top: 1.5rem;
 
     .user-info {
       display: flex;
       align-items: center;
 
       img {
-        width: 32px;
-        height: 32px;
+        width: 2rem;
+        height: 2rem;
         border-radius: 50%;
       }
-
       span {
-        margin-left: 8px;
-        color: #737380;
-        font-size: 14px;
+        margin-left: 0.5rem;
+        color: var(--gray-dark);
+        font-size: 0.875rem;
       }
     }
 
     > div {
       display: flex;
-      gap: 16px;
+      gap: 0.75rem;
+    }
+
+    .counterLikesAdm {
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      bottom: auto;
+      color: var(--gray-dark);
+      display: flex;
+      align-items: flex-end;
+      gap: 0.5rem;
+      cursor: default;
+      background-color: var(--pink-dark);
+      border-radius: 0.2rem;
+      padding: 0.5rem 1rem;
+      color: var(--white-details);
+      font-weight: 500;
+      font-size: 14px;
     }
 
     button {
       border: 0;
       background: transparent;
-      cursor: pointer;
       transition: filter 0.2s;
 
       &.like-button {
         display: flex;
         align-items: flex-end;
-        color: #737380;
-        gap: 8px;
+        color: var(--gray-dark);
+        gap: 0.5rem;
 
         &.liked {
-          color: #835afd;
-          
+          color: var(--purple);
+
           svg path {
-            stroke: #835afd;
+            stroke: var(--purple);
           }
         }
       }
 
-      &:hover {
+      &:not(:disabled):hover {
         filter: brightness(0.7);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
       }
     }
   }

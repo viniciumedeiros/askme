@@ -1,28 +1,26 @@
 .button {
-  height: 50px;
-  border-radius: 8px;
+  height: 3.125rem;
+  border-radius: 0.5rem;
   font-weight: 500;
-  background: #5209fc;
-  color: #FFF;
-  padding: 0 32px;
+  background-color: var(--purple);
+  color: var(--white-details);
+  padding: 0 2rem;
 
   display: flex;
   justify-content: center;
   align-items: center;
 
-  cursor: pointer;
   border: 0;
-
   transition: filter 0.2s;
 
   img {
-    margin-right: 8px;
+    margin-right: 0.5rem;
   }
 
   &.outlined {
-    background: #FFF;
-    border: 1px solid #5025d8;
-    color: #5025d8;
+    background-color: var(--white-details);
+    border: 1px solid var(--purple);
+    color: var(--purple);
   }
 
   &:not(:disabled):hover {

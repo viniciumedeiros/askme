@@ -1,0 +1,54 @@
+.modalRemove {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 3rem 3.5rem;
+
+  @media (max-width: 43.75rem) {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  color: var(--black-text);
+
+  > h2 {
+    line-height: 2.125rem;
+    font-family: "Poppins";
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+.closeImg {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1.5rem;
+  color: var(--red);
+}
+
+.description {
+  text-align: center;
+  color: var(--gray-dark);
+}
+
+.buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 2.625rem;
+
+  @media (max-width: 43.75rem) {
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+  }
+
+  button#cancel {
+    background-color: var(--gray-light);
+    color: var(--gray-dark);
+  }
+
+  button#remove {
+    background-color: var(--red);
+  }
+}

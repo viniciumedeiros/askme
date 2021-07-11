@@ -1,114 +1,204 @@
-import { useHistory, useParams } from 'react-router-dom';
-import { database } from '../services/firebase';
+import { useState, useEffect } from "react";
+import { useParams, useHistory, Link } from "react-router-dom";
 
-import logoImg from '../assets/images/logo.svg';
-import deleteImg from '../assets/images/delete.svg';
-import checkImg from '../assets/images/check.svg';
-import answerImg from '../assets/images/answer.svg';
+import { useTheme, useAuth, useRoom } from "../hooks";
 
-import { Button } from '../components/Button';
-import { Question } from '../components/Question';
-import { RoomCode } from '../components/RoomCode';
-// import { useAuth } from '../hooks/useAuth';
-import { useRoom } from '../hooks/useRoom';
+import { database } from "../services/firebase";
 
-import '../styles/room.scss';
+import {
+  closeImg,
+  deleteImg,
+  trashRedImg,
+  checkImg,
+  answerImg,
+} from "../assets";
 
-type RoomParams = {
-  id: string;
-}
+import {
+  Logo,
+  Question,
+  RoomCode,
+  ToggleThemeButton,
+  Button,
+  ModalRemove,
+  NoQuestionsAuthPage,
+} from "../components";
 
-export function AdminRoom() {
-  // const { user } = useAuth();
+import "../styles/room.scss";
+
+type RoomParams = { id: string };
+
+export function AdminRoom(): JSX.Element {
   const history = useHistory();
   const params = useParams<RoomParams>();
   const roomId = params.id;
 
-  const { title, questions } = useRoom(roomId);
+  const { currentTheme } = useTheme();
+  const { user } = useAuth();
+  const { titleRoom, roomAuthorId, questions } = useRoom(roomId);
+  const [modalRemoveQuestionOpen, setModalRemoveQuestionOpen] = useState("");
+  const [modalRemoveRoomOpen, setModalRemoveRoomOpen] = useState(false);
 
   async function handleEndRoom() {
     await database.ref(`rooms/${roomId}`).update({
       endedAt: new Date(),
     });
 
-    history.push('/');
+    window.location.href = "/";
   }
 
-  async function handleDeleteQuestion(questionId: string) {
-    if (window.confirm('Are you sure you want to delete this question?')) {
-      await database.ref(`rooms/${roomId}/questions/${questionId}`).remove();
+  function handleRequestDeleteQuestion(questionId: string) {
+    setModalRemoveQuestionOpen(questionId);
+  }
+
+  async function handleDeleteQuestion() {
+    await database
+      .ref(`rooms/${roomId}/questions/${modalRemoveQuestionOpen}`)
+      .remove();
+    setModalRemoveQuestionOpen("");
+  }
+
+  async function handleCheckQuestionAsAnswered(
+    questionId: string,
+    wasAnswered: boolean
+  ) {
+    await database.ref(`rooms/${roomId}/questions/${questionId}`).update({
+      wasAnswered: !wasAnswered,
+    });
+  }
+
+  async function handleHighlightQuestion(
+    questionId: string,
+    isHighlighted: boolean
+  ) {
+    await database.ref(`rooms/${roomId}/questions/${questionId}`).update({
+      isHighlighted: !isHighlighted,
+    });
+  }
+
+  useEffect(() => {
+    if (user?.id && roomAuthorId) {
+      if (user?.id !== roomAuthorId) {
+        history.replace(`/rooms/${roomId}`);
+      }
     }
-  }
 
-  async function handleCheckQuestionAsAnswered(questionId: string) {
-    await database.ref(`rooms/${roomId}/questions/${questionId}`).update({
-      isAnswered: true,
-    });
-  }
-
-  async function handleHighlightQuestion(questionId: string) {
-    await database.ref(`rooms/${roomId}/questions/${questionId}`).update({
-      isHighlighted: true,
-    });
-  }
+    if (!user?.id && roomAuthorId) {
+      history.replace(`/rooms/${roomId}`);
+    }
+  }, [history, roomAuthorId, roomId, user]);
 
   return (
     <div id="page-room">
+      <ModalRemove
+        title="Delete question"
+        description="Are you sure you want to delete this question?"
+        buttonText="Yes, delete"
+        iconSrc={trashRedImg}
+        isOpen={Boolean(modalRemoveQuestionOpen)}
+        handleRemove={handleDeleteQuestion}
+        setIsOpen={() =>
+          setModalRemoveQuestionOpen(
+            modalRemoveQuestionOpen ? "" : modalRemoveQuestionOpen
+          )
+        }
+      />
+
+      <ModalRemove
+        title="Close room"
+        description="Are you sure you want to close this room?"
+        buttonText="Yes, close"
+        iconSrc={closeImg}
+        isOpen={modalRemoveRoomOpen}
+        handleRemove={handleEndRoom}
+        setIsOpen={() => setModalRemoveRoomOpen(!modalRemoveRoomOpen)}
+      />
+
       <header>
         <div className="content">
-          <img src={logoImg} alt="Ask Me" />
+          <Logo />
           <div>
             <RoomCode code={roomId} />
-            <Button isOutLined onClick={handleEndRoom}>Room close</Button>
+            <Button isOutlined onClick={() => setModalRemoveRoomOpen(true)}>
+              Close room
+            </Button>
+            <Link className="see-how-mobile" to={`/rooms/${roomId}`}>
+              View as a participant
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="content">
+      <main>
         <div className="room-title">
-          <h1>
-            Room: {title}
-          </h1>
-          { questions.length > 0 && (
-          <span>
-            {questions.length} questions
-          </span>
-          )}
+          <div>
+            <h1 className={currentTheme === "dark" ? "dark" : ""}>
+              {titleRoom}
+            </h1>
+            <span>{questions.length} questions</span>
+          </div>
+          <Link className="see-how" to={`/rooms/${roomId}`}>
+            View as a participant
+          </Link>
+        </div>
+
+        <div className="toggleThemeContainer">
+          <ToggleThemeButton />
         </div>
 
         <div className="question-list">
-          {questions.map((question) => (
-            <Question
-              key={question.id}
-              content={question.content}
-              author={question.author}
-              isAnswered={question.isAnswered}
-              isHighlighted={question.isHighlighted}
-            >
-              {!question.isAnswered && (
-              <>
+          {questions.length >= 1 ? (
+            questions.map((question) => (
+              <Question
+                content={question.content}
+                userName={user?.name}
+                isHighlighted={question.isHighlighted}
+                wasAnswered={question.wasAnswered}
+                author={question.author}
+                key={question.id}
+              >
+                {question.likeCount > 0 && (
+                  <button type="button" className="counterLikesAdm">
+                    <span>{question.likeCount} like(s)</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
-                  onClick={() => handleCheckQuestionAsAnswered(question.id)}
+                  onClick={() =>
+                    handleCheckQuestionAsAnswered(
+                      question.id,
+                      question.wasAnswered
+                    )
+                  }
                 >
                   <img src={checkImg} alt="Mark question as answered" />
                 </button>
+
+                {!question.wasAnswered && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleHighlightQuestion(
+                        question.id,
+                        question.isHighlighted
+                      )
+                    }
+                  >
+                    <img src={answerImg} alt="Highlight the question" />
+                  </button>
+                )}
+
                 <button
                   type="button"
-                  onClick={() => handleHighlightQuestion(question.id)}
+                  onClick={() => handleRequestDeleteQuestion(question.id)}
                 >
-                  <img src={answerImg} alt="Highlight the question" />
+                  <img src={deleteImg} alt="Remove question" />
                 </button>
-              </>
-              )}
-              <button
-                type="button"
-                onClick={() => handleDeleteQuestion(question.id)}
-              >
-                <img src={deleteImg} alt="Remove ask" />
-              </button>
-            </Question>
-          ))}
+              </Question>
+            ))
+          ) : (
+            <NoQuestionsAuthPage />
+          )}
         </div>
       </main>
     </div>

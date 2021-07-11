@@ -1,47 +1,48 @@
-import { FormEvent, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { FormEvent, useState } from "react";
+import { useHistory } from "react-router-dom";
+import { toast } from "react-toastify";
 
-import illustrationImg from '../assets/images/illustration.svg';
-import logoImg from '../assets/images/logo.svg';
-import googleIconImg from '../assets/images/google-icon.svg';
+import { illustrationImg, googleIconImg } from "../assets";
 
-import { database } from '../services/firebase';
+import "../styles/auth.scss";
 
-import { Button } from '../components/Button';
+import { Button, Logo, FooterAuthPage } from "../components";
 
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from "../hooks/useAuth";
 
-import '../styles/auth.scss';
+import { database } from "../services/firebase";
 
-export function Home() {
+export function Home(): JSX.Element {
   const history = useHistory();
   const { user, signInWithGoogle } = useAuth();
-  const [roomCode, setRoomCode] = useState('');
+
+  const [roomCode, setRoomCode] = useState("");
 
   async function handleCreateRoom() {
     if (!user) {
-      await signInWithGoogle()
+      await signInWithGoogle();
     }
 
-    history.push('/rooms/new');
+    history.push("/rooms/new");
   }
 
-  async function handleJoinRoom(event: FormEvent) {
+  async function handleJoinRoom(event: FormEvent): Promise<void> {
     event.preventDefault();
 
-    if (roomCode.trim() === '') {
+    if (roomCode.trim() === "") {
+      toast.error("Enter the room code!");
       return;
     }
 
     const roomRef = await database.ref(`rooms/${roomCode}`).get();
 
     if (!roomRef.exists()) {
-      alert('Room does not exists.');
+      toast.error("Room not found!");
       return;
     }
 
     if (roomRef.val().endedAt) {
-      alert('Room already closed.');
+      toast.error("The room has already been closed by the administrator!");
       return;
     }
 
@@ -53,27 +54,36 @@ export function Home() {
       <aside>
         <img src={illustrationImg} alt="Illustration" />
         <strong>Create live Q&amp;A rooms</strong>
-        <p>Ask your audience's doubts in real-time</p>
+        <p>Ask your audience doubts in real-time</p>
       </aside>
       <main>
         <div className="main-content">
-          <img src={logoImg} alt="Ask Me" />
-          <button onClick={handleCreateRoom} className="create-room">
-            <img src={googleIconImg} alt="Google" />
-            Create your room with Google
+          <Logo />
+
+          <button
+            className="create-room"
+            type="button"
+            onClick={handleCreateRoom}
+          >
+            {!user && <img src={googleIconImg} alt="Google" />}
+            {user ? "Create new room" : "Create your room with Google"}
           </button>
           <div className="separator">or enter a room</div>
           <form onSubmit={handleJoinRoom}>
             <input
               type="text"
               placeholder="Enter the room code"
-              onChange={event => setRoomCode(event.target.value)}
+              id="room-code"
               value={roomCode}
+              onChange={(event) => setRoomCode(event.target.value)}
             />
-            <Button type="submit">Enter the room</Button>
+            <Button type="submit" id="join-to-room">
+              Enter the room
+            </Button>
           </form>
+          <FooterAuthPage />
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -1,38 +1,44 @@
+/* eslint-disable react/require-default-props */
 import { ReactNode } from "react";
-
 import cx from "classnames";
 
-import './styles.scss';
+import "./styles.scss";
 
 type QuestionProps = {
+  children?: ReactNode;
   content: string;
+  userName?: string;
   author: {
     name: string;
     avatar: string;
   };
-  children?: ReactNode;
-  isAnswered?: boolean;
+  wasAnswered?: boolean;
   isHighlighted?: boolean;
-}
+};
 
 export function Question({
   content,
   author,
-  isAnswered = false,
+  children = null,
+  userName = "",
+  wasAnswered = false,
   isHighlighted = false,
-  children,
-}: QuestionProps) {
+}: QuestionProps): JSX.Element {
   return (
-    <div className={cx(
-      'question',
-      { answered: isAnswered },
-      { highlighted: isHighlighted && !isAnswered }
-    )}>
+    <div
+      className={cx(
+        "question",
+        { answered: wasAnswered },
+        { highlighted: isHighlighted && !wasAnswered }
+      )}
+    >
       <p>{content}</p>
       <footer>
         <div className="user-info">
           <img src={author.avatar} alt={author.name} />
-          <span>{author.name}</span>
+          <span>
+            {userName === author.name ? `You | ${author.name}` : author.name}
+          </span>
         </div>
         <div>{children}</div>
       </footer>

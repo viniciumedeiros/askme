@@ -1,0 +1,27 @@
+{
+  "name": "Ask Me",
+  "description": "Ask Me is a free-to-use interactive presentation platform for hosting Live Q&A sessions.",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#5209FC",
+  "background_color": "#282a36",
+  "icons": [
+    {
+      "src": "pwa-favicon.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "pwa-logo-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "pwa-logo-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

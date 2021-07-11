@@ -1,64 +1,127 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
+import { toast } from "react-toastify";
+
 import { database } from "../services/firebase";
 import { useAuth } from "./useAuth";
 
-type FirebaseQuestions = Record<string, {
-  author: {
-    name: string;
-    avatar: string;
+type FirebaseQuestions = Record<
+  string,
+  {
+    author: {
+      name: string;
+      avatar: string;
+    };
+    content: string;
+    isHighlighted: boolean;
+    wasAnswered: boolean;
+    likes?: Record<
+      string,
+      {
+        authorId: string;
+      }
+    >;
   }
-  content: string;
-  isAnswered: boolean;
-  isHighlighted: boolean;
-  likes: Record<string, {
-    authorId: string;
-  }>
-}>
+>;
 
 type QuestionType = {
   id: string;
   author: {
     name: string;
     avatar: string;
-  }
+  };
   content: string;
-  isAnswered: boolean;
   isHighlighted: boolean;
+  wasAnswered: boolean;
   likeCount: number;
-  likeId: string | undefined;
-}
+  likeId: string | null;
+};
 
-export function useRoom(roomId: string) {
+type UseRoomRetorn = {
+  questions: QuestionType[];
+  titleRoom: string;
+  roomAuthorId: string;
+};
+
+export function useRoom(roomId: string): UseRoomRetorn {
+  const history = useHistory();
+
   const { user } = useAuth();
+
+  const [roomAuthorId, setRoomAuthorId] = useState("");
+  const [titleRoom, setTitleRoom] = useState("");
   const [questions, setQuestions] = useState<QuestionType[]>([]);
-  const [title, setTitle] = useState('');
 
   useEffect(() => {
     const roomRef = database.ref(`rooms/${roomId}`);
-    roomRef.on('value', room => {
-      const databaseRoom = room.val();
-      const firebaseQuestions: FirebaseQuestions = databaseRoom.questions ?? {};
 
-      const parsedQuestions = Object.entries(firebaseQuestions).map(([key, value]) => {
-        return {
-          id: key,
-          content: value.content,
-          author: value.author,
-          isHighlighted: value.isHighlighted,
-          isAnswered: value.isAnswered,
-          likeCount: Object.values(value.likes ?? {}).length,
-          likeId: Object.entries(value.likes ?? {}).find(([key, like]) => like.authorId === user?.id)?.[0],
+    roomRef.on("value", (roomCallback) => {
+      const roomExist = roomCallback.exists();
+
+      if (!roomExist) {
+        toast.error("Sala não encontrada!");
+
+        return history.replace("/");
+      }
+
+      const room = roomCallback.val();
+
+      if (room.endedAt) {
+        toast.error("This Room has already been closed!");
+
+        return history.replace("/");
+      }
+
+      const firebaseQuestions: FirebaseQuestions = room.questions ?? {};
+
+      const parsedQuestions = Object.entries(firebaseQuestions).map(
+        ([key, { author, content, isHighlighted, wasAnswered, likes }]) => {
+          const likeEntrie = Object.entries(likes ?? {}).find(
+            ([likeId, like]) => like.authorId === user?.id
+          );
+
+          const likeId = likeEntrie?.[0] ?? null;
+
+          return {
+            id: key,
+            content,
+            author,
+            isHighlighted,
+            wasAnswered,
+            likeCount: Object.values(likes ?? {}).length,
+            likeId,
+          };
         }
-      })
+      );
 
-      setTitle(databaseRoom.title);
-      setQuestions(parsedQuestions);
-    })
+      const questionsSortedPerLikes = parsedQuestions.sort(
+        (likeA, likeB) => likeB.likeCount - likeA.likeCount
+      );
 
-    return () => {
-      roomRef.off('value');
-    }
-  }, [roomId, user?.id]);
+      const questionsSortedPerAnswered = questionsSortedPerLikes.sort(
+        (likeA, likeB) => {
+          if (likeA.wasAnswered === likeB.wasAnswered) {
+            return 0;
+          }
 
-  return { questions, title }
+          if (likeA.wasAnswered) {
+            return 1;
+          }
+
+          return -1;
+        }
+      );
+
+      setTitleRoom(room?.title);
+      setRoomAuthorId(room?.authorId);
+      setQuestions(questionsSortedPerAnswered);
+
+      return () => {
+        roomRef.off("value");
+      };
+    });
+  }, [history, roomAuthorId, roomId, user]);
+
+  return { questions, titleRoom, roomAuthorId };
 }

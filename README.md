@@ -51,6 +51,13 @@ This project was developed with the following technologies:
 - [Typescript][typescript]
 - [Firebase][firebase]
 
+## 🎯 Additional
+
+- PWA - Progressive Web Apps
+- Responsive
+- Dark Mode
+- [Cypress][cypress] End-to-End Testing
+
 ## 🌍 How To Use
 
 To clone and run this application, you'll need [Git](https://git-scm.com), [Node][node] + [Yarn][yarn] installed on your computer.
@@ -112,3 +119,4 @@ This project is under the MIT license. See the [LICENSE](https://github.com/vini
 [firebase]: https://firebase.google.com/
 [node]: https://nodejs.org/en/
 [yarn]: https://yarnpkg.com/
+[cypress]: https://www.cypress.io/
